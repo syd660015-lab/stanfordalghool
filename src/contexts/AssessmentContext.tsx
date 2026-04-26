@@ -124,13 +124,13 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         cooperation: true,
         environmentFitting: true,
         isRepresentative: true,
+        engagement: '',
+        problemSolvingStyle: '',
+        frustrationTolerance: '',
         comments: ''
       },
       qualitativeObservations: {
-        processNotes: '',
-        engagement: '',
-        problemSolvingStyle: '',
-        frustrationTolerance: ''
+        processNotes: ''
       },
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
