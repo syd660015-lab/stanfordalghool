@@ -133,7 +133,9 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         frustrationTolerance: ''
       },
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      startTime: '',
+      endTime: ''
     };
 
     try {

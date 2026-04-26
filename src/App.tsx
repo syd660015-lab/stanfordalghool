@@ -20,13 +20,14 @@ import {
   Scale,
   X,
   Download,
-  AlertCircle
+  AlertCircle,
+  Calculator
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { SUBTESTS, SCORING_TABLES } from './constants';
 import { AssessmentRecord, Patient } from './types';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar, Legend } from 'recharts';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -62,6 +63,87 @@ function Login() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+function CalculatorTool({ onClose }: { onClose: () => void }) {
+  const [display, setDisplay] = useState('0');
+  const [history, setHistory] = useState<string[]>([]);
+
+  const handleAction = (val: string) => {
+    if (val === 'C') {
+      setDisplay('0');
+      return;
+    }
+    if (val === '=') {
+      try {
+        // eslint-disable-next-line no-eval
+        const result = eval(display.replace('×', '*').replace('÷', '/')).toString();
+        setHistory(prev => [display + ' = ' + result, ...prev].slice(0, 5));
+        setDisplay(result);
+      } catch {
+        setDisplay('Error');
+      }
+      return;
+    }
+    if (display === '0' || display === 'Error') {
+      setDisplay(val);
+    } else {
+      setDisplay(display + val);
+    }
+  };
+
+  const buttons = [
+    '7', '8', '9', '÷',
+    '4', '5', '6', '×',
+    '1', '2', '3', '-',
+    '0', '.', '=', '+',
+    'C'
+  ];
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className="fixed bottom-24 left-10 z-[100] w-72 bg-white border border-zinc-200 rounded-3xl shadow-2xl p-6 overflow-hidden"
+    >
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-2 text-indigo-600">
+          <Calculator size={18} />
+          <span className="font-bold text-sm">آلة حاسبة سريعة</span>
+        </div>
+        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-900 transition-colors">
+          <X size={18} />
+        </button>
+      </div>
+
+      <div className="bg-zinc-900 rounded-2xl p-4 mb-6 text-right">
+        <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 h-4">
+          {history[0]?.split('=')[0]}
+        </div>
+        <div className="text-2xl font-black text-white truncate ltr">
+          {display}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {buttons.map(btn => (
+          <button
+            key={btn}
+            onClick={() => handleAction(btn)}
+            className={`h-12 rounded-xl font-black text-sm transition-all active:scale-95 ${
+              btn === '=' ? 'bg-indigo-600 text-white col-span-1' :
+              ['+', '-', '×', '÷'].includes(btn) ? 'bg-indigo-50 text-indigo-600' :
+              btn === 'C' ? 'bg-red-50 text-red-600' :
+              'bg-cream-surface text-zinc-900 hover:bg-zinc-200'
+            }`}
+          >
+            {btn}
+          </button>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
@@ -431,6 +513,7 @@ function AssessmentEditor() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [scoreWarning, setScoreWarning] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   if (!activeAssessment) return <Dashboard />;
@@ -515,6 +598,25 @@ function AssessmentEditor() {
                 onChange={(e) => updateAssessment(activeAssessment.id, { clinicName: e.target.value })}
                 className="text-indigo-600 font-bold bg-indigo-50/50 border border-indigo-100 rounded-lg px-3 py-1 text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-48 transition-all"
               />
+              <div className="h-4 w-px bg-zinc-200" />
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">البداية:</span>
+                <input 
+                  type="time"
+                  value={activeAssessment.startTime || ''}
+                  onChange={(e) => updateAssessment(activeAssessment.id, { startTime: e.target.value })}
+                  className="text-zinc-600 font-bold bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-28 transition-all"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">النهاية:</span>
+                <input 
+                  type="time"
+                  value={activeAssessment.endTime || ''}
+                  onChange={(e) => updateAssessment(activeAssessment.id, { endTime: e.target.value })}
+                  className="text-zinc-600 font-bold bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-28 transition-all"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -586,6 +688,21 @@ function AssessmentEditor() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showCalculator && <CalculatorTool onClose={() => setShowCalculator(false)} />}
+      </AnimatePresence>
+
+      <div className="fixed bottom-10 left-10 z-[90]">
+        <button 
+          onClick={() => setShowCalculator(!showCalculator)}
+          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 ${
+            showCalculator ? 'bg-zinc-900 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+          }`}
+        >
+          {showCalculator ? <X size={24} /> : <Calculator size={24} />}
+        </button>
+      </div>
+
       <div className="flex gap-2 mb-10 bg-zinc-100 p-1.5 rounded-2xl border border-zinc-200 w-fit shadow-inner">
         {[
           { id: 'summary', label: 'الملخص' },
@@ -632,7 +749,7 @@ function AssessmentEditor() {
                       <Radar name="المركب اللفظي" dataKey="verbal" stroke="#4f46e5" strokeWidth={2} fill="#4f46e5" fillOpacity={0.5} />
                       <Radar name="المركب غير اللفظي" dataKey="nonverbal" stroke="#10b981" strokeWidth={2} fill="#10b981" fillOpacity={0.3} />
                       <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e4e4e7', borderRadius: '12px', textAlign: 'right' }} />
-                      <legend verticalAlign="bottom" wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: 'bold' }} />
+                      <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: 'bold' }} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
@@ -1228,6 +1345,18 @@ function AssessmentReportTemplate({ assessment, reportRef }: { assessment: Asses
                 <p className="text-xs font-black text-zinc-400 uppercase">تاريخ الاختبار</p>
                 <p className="text-xl font-bold">{assessment.patient.testDate}</p>
               </div>
+              {assessment.startTime && (
+                <div>
+                  <p className="text-xs font-black text-zinc-400 uppercase">وقت البداية</p>
+                  <p className="text-xl font-bold">{assessment.startTime}</p>
+                </div>
+              )}
+              {assessment.endTime && (
+                <div>
+                  <p className="text-xs font-black text-zinc-400 uppercase">وقت النهاية</p>
+                  <p className="text-xl font-bold">{assessment.endTime}</p>
+                </div>
+              )}
             </div>
           </div>
           <div className="space-y-6 bg-cream-surface p-8 rounded-3xl">

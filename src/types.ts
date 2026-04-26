@@ -82,4 +82,6 @@ export interface AssessmentRecord {
   qualitativeObservations: QualitativeObservations;
   createdAt: any;
   updatedAt: any;
+  startTime?: string;
+  endTime?: string;
 }
