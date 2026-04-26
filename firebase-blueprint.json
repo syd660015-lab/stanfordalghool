@@ -1,0 +1,95 @@
+{
+  "entities": {
+    "Assessment": {
+      "title": "Assessment",
+      "description": "A complete Stanford-Binet Intelligence Scale V record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "patient": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "gender": { "type": "string", "enum": ["male", "female"] },
+            "birthDate": { "type": "string", "format": "date-time" },
+            "testDate": { "type": "string", "format": "date-time" },
+            "ageAtTest": {
+              "type": "object",
+              "properties": {
+                "years": { "type": "number" },
+                "months": { "type": "number" },
+                "days": { "type": "number" }
+              }
+            },
+            "school": { "type": "string" },
+            "grade": { "type": "string" }
+          },
+          "required": ["name", "birthDate", "testDate"]
+        },
+        "examiner": { "type": "string" },
+        "scores": {
+          "type": "object",
+          "properties": {
+            "nonverbal": {
+              "type": "object",
+              "properties": {
+                "fluidReasoning": { "type": "number" },
+                "knowledge": { "type": "number" },
+                "quantitative": { "type": "number" },
+                "visualSpatial": { "type": "number" },
+                "workingMemory": { "type": "number" },
+                "sum": { "type": "number" },
+                "iq": { "type": "number" }
+              }
+            },
+            "verbal": {
+              "type": "object",
+              "properties": {
+                "fluidReasoning": { "type": "number" },
+                "knowledge": { "type": "number" },
+                "quantitative": { "type": "number" },
+                "visualSpatial": { "type": "number" },
+                "workingMemory": { "type": "number" },
+                "sum": { "type": "number" },
+                "iq": { "type": "number" }
+              }
+            },
+            "fullScale": {
+              "type": "object",
+              "properties": {
+                "sum": { "type": "number" },
+                "iq": { "type": "number" }
+              }
+            }
+          }
+        },
+        "itemResponses": {
+          "type": "object",
+          "description": "Keyed by subtest ID, value is a map of item index to score (0/1)."
+        },
+        "behavioralObservations": {
+          "type": "object",
+          "properties": {
+            "isLanguageFitting": { "type": "boolean" },
+            "understandsInstructions": { "type": "boolean" },
+            "visionFitting": { "type": "boolean" },
+            "motorFitting": { "type": "boolean" },
+            "healthFitting": { "type": "boolean" },
+            "cooperation": { "type": "boolean" },
+            "environmentFitting": { "type": "boolean" },
+            "isRepresentative": { "type": "boolean" },
+            "comments": { "type": "string" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/assessments/{assessmentId}": {
+      "schema": "Assessment",
+      "description": "Collection of all intelligence assessments."
+    }
+  }
+}
