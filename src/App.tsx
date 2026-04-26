@@ -183,7 +183,7 @@ function Sidebar({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
       <div className="p-6 border-t border-zinc-100">
         <div className="flex items-center gap-3 px-2 py-4 mb-2 bg-cream-background rounded-2xl border border-zinc-200">
           <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center overflow-hidden font-bold">
-            {user?.photoURL ? <img src={user.photoURL} alt="" /> : (user?.displayName?.[0] || 'A')}
+            {user?.photoURL ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" /> : (user?.displayName?.[0] || 'A')}
           </div>
           <div className="overflow-hidden">
             <p className="text-xs font-bold text-zinc-900 truncate">{user?.displayName || 'الفاحص'}</p>
@@ -755,7 +755,7 @@ function AssessmentEditor() {
                 </div>
               </div>
 
-              <div className="lg:col-span-2 space-y-6">
+              <div key={activeAssessment.id} className="lg:col-span-2 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-indigo-600 rounded-3xl p-8 shadow-lg shadow-indigo-100 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
@@ -1011,7 +1011,7 @@ function AssessmentEditor() {
           )}
 
           {activeSubTab === 'qualitative' && (
-             <div className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
+             <div key={activeAssessment.id} className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
                 <h3 className="text-2xl font-bold text-zinc-900 mb-10">الملاحظات الكيفية والتحليل النوعي</h3>
                 <div className="mt-8">
                   <label className="block text-sm font-bold text-zinc-500 mb-4">ملاحظات إضافية حول عملية التقييم</label>
@@ -1029,7 +1029,7 @@ function AssessmentEditor() {
           )}
 
           {activeSubTab === 'observations' && (
-             <div className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
+             <div key={activeAssessment.id} className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
                 <h3 className="text-2xl font-bold text-zinc-900 mb-10">السجل السلوكي</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                   {[

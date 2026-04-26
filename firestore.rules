@@ -39,9 +39,12 @@ service cloud.firestore {
 
     // --- Validation Helpers ---
     function isValidAssessment(data) {
-      return data.keys().hasAll(['patient', 'examinerId', 'createdAt', 'updatedAt']) &&
+      return data.keys().hasAll(['id', 'patient', 'examinerId', 'scores', 'itemResponses', 'behavioralObservations', 'qualitativeObservations', 'createdAt', 'updatedAt', 'startTime', 'endTime']) &&
+             data.id is string &&
              data.patient is map &&
              data.patient.name is string && data.patient.name.size() > 0 && data.patient.name.size() <= 100 &&
+             data.patient.birthDate is string &&
+             data.patient.testDate is string &&
              data.examinerId == request.auth.uid &&
              data.createdAt == request.time &&
              data.updatedAt == request.time;
@@ -55,8 +58,9 @@ service cloud.firestore {
       allow create: if isSignedIn() && isEmailVerified() && isValidId(assessmentId) && isValidAssessment(incoming());
       
       allow update: if isSignedIn() && (isOwner(resource) || isAdmin()) && (
-        // Action: Update Scores
-        (incoming().diff(existing()).affectedKeys().hasOnly(['scores', 'itemResponses', 'behavioralObservations', 'updatedAt']) &&
+        // Action: Patch Update
+        (incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['scores', 'itemResponses', 'behavioralObservations', 'qualitativeObservations', 'patient', 'startTime', 'endTime', 'updatedAt', 'clinicName']) &&
          incoming().updatedAt == request.time)
       );
       
