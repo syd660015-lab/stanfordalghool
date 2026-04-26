@@ -74,6 +74,7 @@ export interface QualitativeObservations {
 export interface AssessmentRecord {
   id: string;
   examinerId: string;
+  clinicName?: string;
   patient: Patient;
   scores: MultiFactorScores;
   itemResponses: Record<string, Record<number, number>>;

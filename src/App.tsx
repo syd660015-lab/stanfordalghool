@@ -19,7 +19,8 @@ import {
   Calendar,
   Scale,
   X,
-  Download
+  Download,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
@@ -30,63 +31,34 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 function Login() {
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  const handleSignIn = async () => {
-    setIsLoggingIn(true);
-    try {
-      await signIn();
-    } catch (error) {
-      console.error('Login error:', error);
-      setIsLoggingIn(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-cream-background flex items-center justify-center p-4">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white border border-zinc-200 p-12 max-w-md w-full rounded-3xl shadow-xl space-y-8"
+        className="bg-white border border-zinc-200 p-12 max-w-md w-full rounded-3xl shadow-xl"
       >
-        <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-8 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-[0_20px_50px_rgba(79,70,229,0.3)] rotate-3">
-            <ClipboardCheck className="w-10 h-10 text-white -rotate-3" />
+        <div className="mb-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-6 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.2)]">
+            <ClipboardCheck className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-zinc-900 mb-2">
-            ستانفورد بينيه 5
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+            مقياس ستانفورد بينيه 5
           </h1>
-          <p className="text-zinc-500 font-bold">
-            النظام الرقمي للتقييم والتشخيص
+          <p className="text-sm font-medium text-zinc-500 mt-2">
+            مقياس ستانفورد بينيه للذكاء - الطبعة الخامسة
           </p>
         </div>
         
-        <div className="space-y-4">
-          <button 
-            onClick={handleSignIn}
-            disabled={isLoggingIn}
-            className="w-full bg-zinc-900 text-white py-5 rounded-2xl font-black tracking-tight hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-200 active:scale-[0.98] flex items-center justify-center gap-4 disabled:opacity-50"
-          >
-            {isLoggingIn ? (
-              <div className="w-6 h-6 border-4 border-white/20 border-t-white animate-spin rounded-full" />
-            ) : (
-              <svg className="w-6 h-6" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="currentColor" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z" />
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-            )}
-            {isLoggingIn ? 'جاري التحقق...' : 'دخول سريع وآمن عبر جوجل'}
-          </button>
-          <p className="text-[10px] text-center text-zinc-400 font-bold uppercase tracking-widest">
-            يتم تسجيل الدخول تلقائياً في المرات القادمة
-          </p>
-        </div>
+        <button 
+          onClick={signIn}
+          className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold tracking-tight hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-[0.98]"
+        >
+          تسجيل الدخول عبر جوجل
+        </button>
         
-        <div className="pt-8 border-t border-zinc-100 flex items-center justify-center gap-2">
-          <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
-          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">متصل بالنظام السحابي</span>
+        <div className="mt-8 pt-8 border-t border-zinc-100 text-[10px] uppercase font-bold tracking-[0.2em] text-zinc-400 text-center">
+          للبيئة العيادية فقط
         </div>
       </motion.div>
     </div>
@@ -458,11 +430,21 @@ function AssessmentEditor() {
   const [activeSubTab, setActiveSubTab] = useState('summary');
   const [showConfirm, setShowConfirm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [scoreWarning, setScoreWarning] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   if (!activeAssessment) return <Dashboard />;
 
+  const totalScores = Object.values(activeAssessment.itemResponses).reduce(
+    (acc: number, curr) => acc + Object.keys(curr).length, 0
+  );
+
   const handleDownloadPDF = async () => {
+    if (totalScores === 0) {
+      setScoreWarning(true);
+      setTimeout(() => setScoreWarning(false), 3000);
+      return;
+    }
     if (!reportRef.current) return;
     setIsGenerating(true);
     try {
@@ -487,6 +469,11 @@ function AssessmentEditor() {
   };
 
   const handleSave = () => {
+    if (totalScores === 0) {
+      setScoreWarning(true);
+      setTimeout(() => setScoreWarning(false), 3000);
+      return;
+    }
     setShowConfirm(true);
   };
 
@@ -496,12 +483,12 @@ function AssessmentEditor() {
     setActiveAssessmentById('');
   };
 
-  const chartData = [
-    { factor: 'استدلال تحليلي', verbal: activeAssessment.scores.verbal.fluidReasoning, nonverbal: activeAssessment.scores.nonverbal.fluidReasoning, full: 10 },
-    { factor: 'معلومات', verbal: activeAssessment.scores.verbal.knowledge, nonverbal: activeAssessment.scores.nonverbal.knowledge, full: 10 },
-    { factor: 'استدلال كمي', verbal: activeAssessment.scores.verbal.quantitative, nonverbal: activeAssessment.scores.nonverbal.quantitative, full: 10 },
-    { factor: 'بصري مكاني', verbal: activeAssessment.scores.verbal.visualSpatial, nonverbal: activeAssessment.scores.nonverbal.visualSpatial, full: 10 },
-    { factor: 'ذاكرة عاملة', verbal: activeAssessment.scores.verbal.workingMemory, nonverbal: activeAssessment.scores.nonverbal.workingMemory, full: 10 },
+  const factorsData = [
+    { factor: 'الاستدلال التحليلي', verbal: activeAssessment.scores.verbal.fluidReasoning, nonverbal: activeAssessment.scores.nonverbal.fluidReasoning },
+    { factor: 'المعلومات', verbal: activeAssessment.scores.verbal.knowledge, nonverbal: activeAssessment.scores.nonverbal.knowledge },
+    { factor: 'الاستدلال الكمي', verbal: activeAssessment.scores.verbal.quantitative, nonverbal: activeAssessment.scores.nonverbal.quantitative },
+    { factor: 'بصري مكاني', verbal: activeAssessment.scores.verbal.visualSpatial, nonverbal: activeAssessment.scores.nonverbal.visualSpatial },
+    { factor: 'ذاكرة عاملة', verbal: activeAssessment.scores.verbal.workingMemory, nonverbal: activeAssessment.scores.nonverbal.workingMemory },
   ];
 
   return (
@@ -516,15 +503,40 @@ function AssessmentEditor() {
           </button>
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-zinc-900">{activeAssessment.patient.name}</h1>
-            <p className="text-zinc-500 font-medium tracking-tight mt-1">
-              بروتوكول التقييم • معرف السجل: {activeAssessment.id.slice(0, 8)}
-            </p>
+            <div className="flex items-center gap-4 mt-2">
+              <p className="text-zinc-500 font-medium tracking-tight">
+                بروتوكول التقييم • معرف السجل: {activeAssessment.id.slice(0, 8)}
+              </p>
+              <div className="h-4 w-px bg-zinc-200" />
+              <input 
+                type="text"
+                placeholder="اسم العيادة..."
+                value={activeAssessment.clinicName || ''}
+                onChange={(e) => updateAssessment(activeAssessment.id, { clinicName: e.target.value })}
+                className="text-indigo-600 font-bold bg-indigo-50/50 border border-indigo-100 rounded-lg px-3 py-1 text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-48 transition-all"
+              />
+            </div>
           </div>
         </div>
         
-        <div className="flex gap-4">
-          <button 
-            onClick={handleDownloadPDF}
+        <div className="flex flex-col items-end gap-3">
+          <AnimatePresence>
+            {scoreWarning && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="flex items-center gap-2 text-amber-600 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl text-xs font-bold"
+              >
+                <AlertCircle size={14} />
+                لا يمكن الحفظ أو التحميل بدون إدخال درجات
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          <div className="flex gap-4">
+            <button 
+              onClick={handleDownloadPDF}
             disabled={isGenerating}
             className="bg-white border border-zinc-200 text-zinc-600 px-6 py-3 rounded-2xl font-bold tracking-tight flex items-center gap-3 hover:bg-cream-surface transition-all shadow-sm active:scale-95 disabled:opacity-50"
           >
@@ -540,7 +552,8 @@ function AssessmentEditor() {
             اعتماد البروتوكول
           </button>
         </div>
-      </header>
+      </div>
+    </header>
 
       <AssessmentReportTemplate assessment={activeAssessment} reportRef={reportRef} />
 
@@ -612,13 +625,14 @@ function AssessmentEditor() {
                 </h3>
                 <div className="h-[350px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={factorsData}>
                       <PolarGrid stroke="#f1f1ee" />
-                      <PolarAngleAxis dataKey="factor" tick={{ fontSize: 12, fill: '#71717a', fontWeight: '800' }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 20]} stroke="#f1f1ee" />
-                      <Radar name="اللفظي" dataKey="verbal" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.4} />
-                      <Radar name="غير اللفظي" dataKey="nonverbal" stroke="#18181b" strokeWidth={3} fill="transparent" />
-                      <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e4e4e7', borderRadius: '12px' }} />
+                      <PolarAngleAxis dataKey="factor" tick={{ fontSize: 11, fill: '#71717a', fontWeight: '800' }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 20]} stroke="#f1f1ee" axisLine={false} tick={false} />
+                      <Radar name="المركب اللفظي" dataKey="verbal" stroke="#4f46e5" strokeWidth={2} fill="#4f46e5" fillOpacity={0.5} />
+                      <Radar name="المركب غير اللفظي" dataKey="nonverbal" stroke="#10b981" strokeWidth={2} fill="#10b981" fillOpacity={0.3} />
+                      <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e4e4e7', borderRadius: '12px', textAlign: 'right' }} />
+                      <legend verticalAlign="bottom" wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: 'bold' }} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
@@ -1153,6 +1167,12 @@ function MainApp() {
             ) : activeTab === 'new' ? (
               <CreateAssessmentForm onCancel={() => setActiveTab('dashboard')} />
             ) : null}
+            
+            <footer className="mt-20 pb-12 text-center">
+              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest leading-loose max-w-2xl mx-auto">
+                إعداد: دكتور/ أحمد حمدي عاشور الغول ـ دكتوراه في علم النفس التربوي وخبير مايكروسوفت لتكنولوجيا المعلومات
+              </p>
+            </footer>
           </motion.div>
         </AnimatePresence>
       </main>
@@ -1178,6 +1198,9 @@ function AssessmentReportTemplate({ assessment, reportRef }: { assessment: Asses
           <div>
             <h1 className="text-4xl font-black text-indigo-600 mb-2">تقرير مقياس ستانفورد بينيه (الصورة الخامسة)</h1>
             <p className="text-xl font-bold text-zinc-500">سجل التقييم والنتائج العيادية</p>
+            {assessment.clinicName && (
+              <p className="text-lg font-bold text-indigo-400 mt-2">{assessment.clinicName}</p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-sm font-black text-zinc-400 uppercase tracking-widest">تاريخ التقرير</p>
@@ -1218,21 +1241,38 @@ function AssessmentReportTemplate({ assessment, reportRef }: { assessment: Asses
 
         <div className="grid grid-cols-2 gap-12 mb-16">
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold border-r-4 border-indigo-600 pr-4">درجات المركبات</h2>
-            <div className="bg-zinc-50 p-8 rounded-3xl space-y-6">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold">المركب اللفظي</span>
-                <span className="text-3xl font-black">{assessment.scores.verbal.iq}</span>
+            <h2 className="text-2xl font-bold border-r-4 border-indigo-600 pr-4">تحليل رادار العوامل</h2>
+            <div className="bg-zinc-50 p-8 rounded-3xl h-[450px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                  { factor: 'الاستدلال التحليلي', verbal: assessment.scores.verbal.fluidReasoning, nonverbal: assessment.scores.nonverbal.fluidReasoning },
+                  { factor: 'المعلومات', verbal: assessment.scores.verbal.knowledge, nonverbal: assessment.scores.nonverbal.knowledge },
+                  { factor: 'الاستدلال الكمي', verbal: assessment.scores.verbal.quantitative, nonverbal: assessment.scores.nonverbal.quantitative },
+                  { factor: 'بصري مكاني', verbal: assessment.scores.verbal.visualSpatial, nonverbal: assessment.scores.nonverbal.visualSpatial },
+                  { factor: 'ذاكرة عاملة', verbal: assessment.scores.verbal.workingMemory, nonverbal: assessment.scores.nonverbal.workingMemory },
+                ]}>
+                  <PolarGrid stroke="#d4d4d8" />
+                  <PolarAngleAxis dataKey="factor" tick={{ fontSize: 14, fill: '#3f3f46', fontWeight: 'bold' }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 20]} axisLine={false} tick={false} />
+                  <Radar name="المركب اللفظي" dataKey="verbal" stroke="#4f46e5" strokeWidth={3} fill="#4f46e5" fillOpacity={0.6} />
+                  <Radar name="المركب غير اللفظي" dataKey="nonverbal" stroke="#10b981" strokeWidth={3} fill="#10b981" fillOpacity={0.4} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex justify-center gap-8 text-sm font-bold">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-indigo-600 rounded"></div>
+                <span>المركب اللفظي</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold">المركب غير اللفظي</span>
-                <span className="text-3xl font-black">{assessment.scores.nonverbal.iq}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-emerald-500 rounded"></div>
+                <span>المركب غير اللفظي</span>
               </div>
             </div>
           </div>
           
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold border-r-4 border-indigo-600 pr-4">تحليل العوامل</h2>
+            <h2 className="text-2xl font-bold border-r-4 border-indigo-600 pr-4">تحليل العوامل (الأرقام)</h2>
             <div className="space-y-4">
               {[
                 { label: 'الاستدلال التحليلي', v: assessment.scores.verbal.fluidReasoning, nv: assessment.scores.nonverbal.fluidReasoning },
@@ -1241,9 +1281,12 @@ function AssessmentReportTemplate({ assessment, reportRef }: { assessment: Asses
                 { label: 'المعالجة البصرية المكانية', v: assessment.scores.verbal.visualSpatial, nv: assessment.scores.nonverbal.visualSpatial },
                 { label: 'الذاكرة العاملة', v: assessment.scores.verbal.workingMemory, nv: assessment.scores.nonverbal.workingMemory },
               ].map(f => (
-                <div key={f.label} className="flex justify-between items-center p-4 bg-white border border-zinc-100 rounded-2xl">
+                <div key={f.label} className="flex justify-between items-center p-4 bg-white border border-zinc-100 rounded-2xl shadow-sm">
                   <span className="font-bold">{f.label}</span>
-                  <span className="font-black text-indigo-600">لفظي: {f.v} | غير لفظي: {f.nv}</span>
+                  <div className="flex gap-4">
+                    <span className="font-bold text-indigo-600">لفظي: {f.v}</span>
+                    <span className="font-bold text-emerald-600">غير لفظي: {f.nv}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1297,7 +1340,10 @@ function AssessmentReportTemplate({ assessment, reportRef }: { assessment: Asses
         </div>
 
         <div className="flex justify-between items-center pt-12 border-t border-zinc-100 mt-20">
-          <p className="text-zinc-400 text-sm italic">تم توليد هذا التقرير آلياً عبر نظام ستانفورد بينيه الرقمي</p>
+          <div>
+            <p className="text-zinc-400 text-sm italic mb-2">تم توليد هذا التقرير آلياً عبر نظام ستانفورد بينيه الرقمي</p>
+            <p className="text-zinc-500 text-xs font-bold">إعداد: دكتور/ أحمد حمدي عاشور الغول ـ دكتوراه في علم النفس التربوي وخبير مايكروسوفت لتكنولوجيا المعلومات</p>
+          </div>
           <div className="text-right">
              <div className="w-48 h-px bg-zinc-200 mb-2"></div>
              <p className="text-sm font-bold text-zinc-500 uppercase">توقيع الفاحص</p>
