@@ -1,7 +1,7 @@
 # Security Specification - assessment App
 
 ## 1. Data Invariants
-- **Authentication**: Users must be authenticated to perform any operation.
+- **Authentication**: Users must be authenticated to perform any operation. Supports Google Login (verified) and Anonymous Guest access.
 - **Ownership**: Only the examiner who created the assessment (identified by `examinerId`) can read or update it.
 - **Admin Access**: The user `ashoorgool2003@gmail.com` is the system admin and has full access to all assessments, including the ability to delete them.
 - **Schema Integrity**: Every assessment must strictly follow the `Assessment` entity schema.

@@ -4,7 +4,7 @@
  */
 
 import { AssessmentProvider, useAssessment } from './contexts/AssessmentContext';
-import { signIn, signOut } from './lib/firebase';
+import { signIn, signOut, signInGuest } from './lib/firebase';
 import React, { useState, useRef } from 'react';
 import { 
   ClipboardCheck, 
@@ -53,9 +53,16 @@ function Login() {
         
         <button 
           onClick={signIn}
-          className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold tracking-tight hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-[0.98]"
+          className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold tracking-tight hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-[0.98] mb-4"
         >
           تسجيل الدخول عبر جوجل
+        </button>
+
+        <button 
+          onClick={signInGuest}
+          className="w-full bg-white border border-zinc-200 text-zinc-600 py-4 rounded-2xl font-bold tracking-tight hover:bg-cream-background transition-all active:scale-[0.98]"
+        >
+          الدخول كزائر
         </button>
         
         <div className="mt-8 pt-8 border-t border-zinc-100 text-[10px] uppercase font-bold tracking-[0.2em] text-zinc-400 text-center">
