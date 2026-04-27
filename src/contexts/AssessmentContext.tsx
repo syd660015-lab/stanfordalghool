@@ -89,14 +89,25 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return;
     }
 
-    const q = query(
-      collection(db, 'assessments'),
-      where('examinerId', '==', user.uid),
-      orderBy('updatedAt', 'desc')
-    );
+    const q = isAdmin 
+      ? query(collection(db, 'assessments'), orderBy('updatedAt', 'desc'))
+      : query(
+          collection(db, 'assessments'),
+          where('examinerId', '==', user.uid)
+        );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AssessmentRecord));
+      let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AssessmentRecord));
+      
+      // Sort client-side if we couldn't use server-side orderBy
+      if (!isAdmin) {
+        data = data.sort((a, b) => {
+          const timeA = a.updatedAt?.toMillis?.() || 0;
+          const timeB = b.updatedAt?.toMillis?.() || 0;
+          return timeB - timeA;
+        });
+      }
+      
       setAssessments(data);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'assessments');
