@@ -160,6 +160,8 @@ function Sidebar({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'لوحة التحكم' },
     { id: 'new', icon: Plus, label: 'سجل جديد' },
+    { id: 'analytics', icon: BarChart3, label: 'التحليلات العامة' },
+    { id: 'resources', icon: FileText, label: 'المصادر والمراجع' },
   ];
 
   return (
@@ -193,8 +195,12 @@ function Sidebar({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
             {user?.photoURL ? <img src={user.photoURL} alt="" /> : (user?.displayName?.[0] || 'A')}
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs font-bold text-zinc-900 truncate">{user?.displayName || 'الفاحص'}</p>
-            <p className="text-[10px] text-zinc-500 truncate">{user?.email}</p>
+            <p className="text-xs font-bold text-zinc-900 truncate">
+              {user?.isAnonymous ? 'زائر' : (user?.displayName || 'الفاحص')}
+            </p>
+            <p className="text-[10px] text-zinc-500 truncate">
+              {user?.isAnonymous ? 'حساب تجريبي' : user?.email}
+            </p>
           </div>
         </div>
         <button 
@@ -389,7 +395,7 @@ function ComparisonView({ selectedIds, onBack }: { selectedIds: string[], onBack
 }
 
 function Dashboard() {
-  const { assessments, setActiveAssessmentById } = useAssessment();
+  const { assessments, setActiveAssessmentById, isAdmin, deleteAssessment } = useAssessment();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [viewState, setViewState] = useState<'list' | 'compare'>('list');
@@ -480,7 +486,24 @@ function Dashboard() {
                 <span className="bg-indigo-50 text-indigo-600 text-xs font-bold px-3 py-1 rounded-full border border-indigo-100 uppercase tracking-widest">
                   سجل
                 </span>
-                {!isCompareMode && <ChevronRight className="text-zinc-300 group-hover:text-zinc-900 transition-colors" />}
+                {!isCompareMode && (
+                  <div className="flex gap-2">
+                    {isAdmin && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
+                            deleteAssessment(a.id);
+                          }
+                        }}
+                        className="text-zinc-300 hover:text-red-600 transition-colors"
+                      >
+                        <X size={18} />
+                      </button>
+                    )}
+                    <ChevronRight className="text-zinc-300 group-hover:text-zinc-900 transition-colors" />
+                  </div>
+                )}
               </div>
               
               <h3 className="text-2xl font-bold text-zinc-900 mb-2">{a.patient.name}</h3>
@@ -1259,6 +1282,108 @@ function CreateAssessmentForm({ onCancel }: { onCancel: () => void }) {
   );
 }
 
+function ResourcesView() {
+  const resources = [
+    { title: 'الاستدلال التحليلي (Fluid Reasoning)', content: 'يقيس القدرة على التفكير المنطقي وحل المشكلات الجديدة غير المكتسبة مسبقاً.' },
+    { title: 'المعلومات (Knowledge)', content: 'يقيس كمية المعلومات المكتسبة من خلال البيئة والتعليم والخبرة.' },
+    { title: 'الاستدلال الكمي (Quantitative Reasoning)', content: 'يقيس القدرة على التعامل مع الأرقام والعلاقات الكمية والمسائل الرياضية.' },
+    { title: 'المعالجة البصرية المكانية (Visual-Spatial)', content: 'يقيس القدرة على ملاحظة الأنماط والتفاصيل المكانية وتركيب الأشكال.' },
+    { title: 'الذاكرة العاملة (Working Memory)', content: 'يقيس القدرة على الاحتفاظ بالمعلومات في الذاكرة لفترة قصيرة ومعالجتها.' },
+  ];
+
+  return (
+    <div className="p-10 max-w-7xl mx-auto space-y-10">
+      <header>
+        <h1 className="text-4xl font-bold tracking-tight text-zinc-900">المصادر والمراجع</h1>
+        <p className="text-zinc-500 font-medium mt-1">شرح موجز لمكونات مقياس ستانفورد بينيه 5</p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {resources.map((res, i) => (
+          <div key={i} className="bg-white border border-zinc-200 p-8 rounded-3xl shadow-sm hover:shadow-md transition-all">
+            <h3 className="text-xl font-bold text-indigo-600 mb-4">{res.title}</h3>
+            <p className="text-zinc-600 leading-relaxed font-medium">{res.content}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-indigo-50 border border-indigo-100 p-10 rounded-3xl mt-10">
+        <h3 className="text-xl font-bold text-indigo-900 mb-4">حول الطبعة الخامسة</h3>
+        <p className="text-indigo-800 leading-relaxed font-medium">
+          تعتبر الطبعة الخامسة من مقياس ستانفورد بينيه للذكاء واحدة من أكثر الأدوات دقة وشيوعاً في قياس القدرات العقلية والذكاء، 
+          حيث تغطي الفئات العمرية من سنتين وحتى 85 سنة فما فوق. تتميز هذه الطبعة بفصل المكونات اللفظية عن غير اللفظية، 
+          مما يوفر رؤية أعمق لنقاط القوة والضعف لدى المفحوص.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsView() {
+  const { assessments } = useAssessment();
+  
+  if (assessments.length === 0) {
+    return (
+      <div className="p-10 text-center">
+        <h2 className="text-2xl font-bold text-zinc-400 italic">لا توجد بيانات كافية للتحليل</h2>
+      </div>
+    );
+  }
+
+  const iqDistribution = [
+    { name: '70-79', count: assessments.filter(a => a.scores.fullScale.iq >= 70 && a.scores.fullScale.iq < 80).length },
+    { name: '80-89', count: assessments.filter(a => a.scores.fullScale.iq >= 80 && a.scores.fullScale.iq < 90).length },
+    { name: '90-109', count: assessments.filter(a => a.scores.fullScale.iq >= 90 && a.scores.fullScale.iq < 110).length },
+    { name: '110-119', count: assessments.filter(a => a.scores.fullScale.iq >= 110 && a.scores.fullScale.iq < 120).length },
+    { name: '120+', count: assessments.filter(a => a.scores.fullScale.iq >= 120).length },
+  ];
+
+  const averageIq = Math.round(assessments.reduce((acc, curr) => acc + (curr.scores.fullScale.iq || 0), 0) / assessments.length);
+
+  return (
+    <div className="p-10 max-w-7xl mx-auto space-y-10">
+      <header>
+        <h1 className="text-4xl font-bold tracking-tight text-zinc-900">التحليلات العامة</h1>
+        <p className="text-zinc-500 font-medium mt-1">نظرة شاملة على أداء جميع المفحوصين</p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-indigo-600 p-8 rounded-3xl text-white shadow-xl">
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">إجمالي التقييمات</p>
+          <p className="text-5xl font-black">{assessments.length}</p>
+        </div>
+        <div className="bg-white border border-zinc-200 p-8 rounded-3xl shadow-sm">
+          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">متوسط نسبة الذكاء</p>
+          <p className="text-5xl font-black text-zinc-900">{averageIq}</p>
+        </div>
+        <div className="bg-zinc-900 p-8 rounded-3xl text-white shadow-xl">
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">آخر تقييم</p>
+          <p className="text-xl font-bold truncate">{assessments[0]?.patient.name}</p>
+          <p className="text-xs opacity-60 mt-1">{assessments[0]?.patient.testDate}</p>
+        </div>
+      </div>
+
+      <div className="bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
+        <h3 className="text-xl font-bold text-zinc-900 mb-8">توزيع نسب الذكاء (IQ Distribution)</h3>
+        <div className="h-80 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={iqDistribution}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1ee" />
+              <XAxis dataKey="name" tick={{ fontSize: 12, fontWeight: 700 }} />
+              <YAxis tick={{ fontSize: 12, fontWeight: 700 }} />
+              <Tooltip 
+                cursor={{ fill: '#f8f8f5' }}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+              />
+              <Bar dataKey="count" fill="#4f46e5" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MainApp() {
   const { user, loading, activeAssessment } = useAssessment();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1290,6 +1415,10 @@ function MainApp() {
               <Dashboard />
             ) : activeTab === 'new' ? (
               <CreateAssessmentForm onCancel={() => setActiveTab('dashboard')} />
+            ) : activeTab === 'analytics' ? (
+              <AnalyticsView />
+            ) : activeTab === 'resources' ? (
+              <ResourcesView />
             ) : null}
             
             <footer className="mt-20 pb-12 text-center">

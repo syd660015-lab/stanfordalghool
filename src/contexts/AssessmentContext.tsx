@@ -5,6 +5,7 @@ import {
   setDoc, 
   getDocs, 
   getDoc, 
+  deleteDoc,
   query, 
   where, 
   orderBy, 
@@ -22,8 +23,10 @@ interface AssessmentContextType {
   loading: boolean;
   assessments: AssessmentRecord[];
   activeAssessment: AssessmentRecord | null;
+  isAdmin: boolean;
   createAssessment: (patientData: AssessmentRecord['patient']) => Promise<string>;
   updateAssessment: (id: string, data: Partial<AssessmentRecord>) => Promise<void>;
+  deleteAssessment: (id: string) => Promise<void>;
   setActiveAssessmentById: (id: string) => void;
 }
 
@@ -56,6 +59,7 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeAssessment = assessments.find(a => a.id === activeId) || null;
+  const isAdmin = user?.email === 'ashoorgool2003@gmail.com';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -173,12 +177,20 @@ export const AssessmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const deleteAssessment = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'assessments', id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `assessments/${id}`);
+    }
+  };
+
   const setActiveAssessmentById = (id: string) => {
     setActiveId(id || null);
   };
 
   return (
-    <AssessmentContext.Provider value={{ user, loading, assessments, activeAssessment, createAssessment, updateAssessment, setActiveAssessmentById }}>
+    <AssessmentContext.Provider value={{ user, loading, assessments, activeAssessment, isAdmin, createAssessment, updateAssessment, deleteAssessment, setActiveAssessmentById }}>
       {children}
     </AssessmentContext.Provider>
   );
