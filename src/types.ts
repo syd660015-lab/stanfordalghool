@@ -31,7 +31,6 @@ export interface Patient {
   testDate: string;
   school: string;
   grade: string;
-  diagnosis?: string;
 }
 
 export interface SubtestScores {
@@ -62,14 +61,14 @@ export interface BehavioralObservations {
   cooperation: boolean;
   environmentFitting: boolean;
   isRepresentative: boolean;
-  engagement: string;
-  problemSolvingStyle: string;
-  frustrationTolerance: string;
   comments: string;
 }
 
 export interface QualitativeObservations {
   processNotes: string;
+  engagement: string;
+  problemSolvingStyle: string;
+  frustrationTolerance: string;
 }
 
 export interface AssessmentRecord {

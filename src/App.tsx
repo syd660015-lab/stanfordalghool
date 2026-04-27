@@ -183,7 +183,7 @@ function Sidebar({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
       <div className="p-6 border-t border-zinc-100">
         <div className="flex items-center gap-3 px-2 py-4 mb-2 bg-cream-background rounded-2xl border border-zinc-200">
           <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center overflow-hidden font-bold">
-            {user?.photoURL ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" /> : (user?.displayName?.[0] || 'A')}
+            {user?.photoURL ? <img src={user.photoURL} alt="" /> : (user?.displayName?.[0] || 'A')}
           </div>
           <div className="overflow-hidden">
             <p className="text-xs font-bold text-zinc-900 truncate">{user?.displayName || 'الفاحص'}</p>
@@ -755,57 +755,35 @@ function AssessmentEditor() {
                 </div>
               </div>
 
-              <div key={activeAssessment.id} className="lg:col-span-2 space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-indigo-600 rounded-3xl p-8 shadow-lg shadow-indigo-100 flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                      <span className="bg-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">مركب</span>
-                      <BarChart3 className="text-white/40" />
+              <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-indigo-600 rounded-3xl p-8 shadow-lg shadow-indigo-100 flex flex-col justify-between">
+                  <div className="flex justify-between items-start">
+                    <span className="bg-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">مركب</span>
+                    <BarChart3 className="text-white/40" />
+                  </div>
+                  <div>
+                    <h3 className="text-white text-lg font-bold">نسبة الذكاء الكلية</h3>
+                    <p className="text-6xl font-black text-white mt-2 leading-none">{activeAssessment.scores.fullScale.iq || '--'}</p>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-zinc-200 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">نشط</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">اللفظي</p>
+                      <p className="text-3xl font-black text-zinc-900">{activeAssessment.scores.verbal.iq || '--'}</p>
                     </div>
                     <div>
-                      <h3 className="text-white text-lg font-bold">نسبة الذكاء الكلية</h3>
-                      <p className="text-6xl font-black text-white mt-2 leading-none">{activeAssessment.scores.fullScale.iq || '--'}</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-white border border-zinc-200 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
-                    <div className="flex justify-between items-start">
-                      <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">نشط</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">اللفظي</p>
-                        <p className="text-3xl font-black text-zinc-900">{activeAssessment.scores.verbal.iq || '--'}</p>
-                      </div>
-                      <div>
-                        <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">غير اللفظي</p>
-                        <p className="text-3xl font-black text-zinc-900">{activeAssessment.scores.nonverbal.iq || '--'}</p>
-                      </div>
+                      <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">غير اللفظي</p>
+                      <p className="text-3xl font-black text-zinc-900">{activeAssessment.scores.nonverbal.iq || '--'}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
-                  <h3 className="text-xl font-bold text-zinc-900 mb-6">بيانات الحالة</h3>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest">التشخيص</label>
-                      <input 
-                        type="text"
-                        placeholder="أدخل التشخيص هنا..."
-                        className="w-full bg-cream-surface border border-zinc-100 rounded-xl p-4 text-zinc-900 focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-right shadow-sm"
-                        defaultValue={activeAssessment.patient.diagnosis}
-                        onBlur={(e) => {
-                          updateAssessment(activeAssessment.id, { 
-                            patient: { ...activeAssessment.patient, diagnosis: e.target.value } 
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
+                <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
                   <h3 className="text-xl font-bold text-zinc-900 mb-6">تحليل العوامل</h3>
                   <div className="space-y-6">
                     {[
@@ -1011,8 +989,29 @@ function AssessmentEditor() {
           )}
 
           {activeSubTab === 'qualitative' && (
-             <div key={activeAssessment.id} className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
+             <div className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
                 <h3 className="text-2xl font-bold text-zinc-900 mb-10">الملاحظات الكيفية والتحليل النوعي</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                  {[
+                    { key: 'engagement', label: 'مستوى الاندماج والدافعية', placeholder: 'كيف كان تفاعل المفحوص مع المهام؟' },
+                    { key: 'problemSolvingStyle', label: 'أسلوب حل المشكلات', placeholder: 'هل يتبع أسلوباً منظماً أم عشوائياً؟' },
+                    { key: 'frustrationTolerance', label: 'تحمل الإحباط', placeholder: 'كيف يتعامل المفحوص مع المهام الصعبة؟' }
+                  ].map(field => (
+                    <div key={field.key} className="space-y-4">
+                      <label className="block text-sm font-bold text-zinc-500">{field.label}</label>
+                      <textarea 
+                        className="w-full h-32 bg-cream-surface border border-zinc-200 rounded-2xl p-6 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all text-right"
+                        defaultValue={activeAssessment.qualitativeObservations[field.key as keyof typeof activeAssessment.qualitativeObservations]}
+                        placeholder={field.placeholder}
+                        onChange={(e) => {
+                          const newQual = { ...activeAssessment.qualitativeObservations, [field.key]: e.target.value };
+                          updateAssessment(activeAssessment.id, { qualitativeObservations: newQual });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
                 <div className="mt-8">
                   <label className="block text-sm font-bold text-zinc-500 mb-4">ملاحظات إضافية حول عملية التقييم</label>
                   <textarea 
@@ -1029,7 +1028,7 @@ function AssessmentEditor() {
           )}
 
           {activeSubTab === 'observations' && (
-             <div key={activeAssessment.id} className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
+             <div className="lg:col-span-4 bg-white border border-zinc-200 p-10 rounded-3xl shadow-xl">
                 <h3 className="text-2xl font-bold text-zinc-900 mb-10">السجل السلوكي</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                   {[
@@ -1075,27 +1074,6 @@ function AssessmentEditor() {
                     </div>
                   ))}
                 </div>
-
-                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {[
-                    { key: 'engagement', label: 'مستوى الاندماج والدافعية', placeholder: 'كيف كان تفاعل المفحوص مع المهام؟' },
-                    { key: 'problemSolvingStyle', label: 'أسلوب حل المشكلات', placeholder: 'هل يتبع أسلوباً منظماً أم عشوائياً؟' },
-                    { key: 'frustrationTolerance', label: 'تحمل الإحباط', placeholder: 'كيف يتعامل المفحوص مع المهام الصعبة؟' }
-                  ].map(field => (
-                    <div key={field.key} className="space-y-4">
-                      <label className="block text-sm font-bold text-zinc-500">{field.label}</label>
-                      <textarea 
-                        className="w-full h-32 bg-cream-surface border border-zinc-200 rounded-2xl p-6 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition-all text-right"
-                        defaultValue={activeAssessment.behavioralObservations[field.key as keyof typeof activeAssessment.behavioralObservations] as string}
-                        placeholder={field.placeholder}
-                        onChange={(e) => {
-                          const newObs = { ...activeAssessment.behavioralObservations, [field.key]: e.target.value };
-                          updateAssessment(activeAssessment.id, { behavioralObservations: newObs });
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
                 
                 <div className="mt-12">
                   <label className="block text-sm font-bold text-zinc-500 mb-4">الملاحظات الكيفية والملحوظات العيادية</label>
@@ -1125,8 +1103,7 @@ function CreateAssessmentForm({ onCancel }: { onCancel: () => void }) {
     birthDate: '',
     testDate: format(new Date(), 'yyyy-MM-dd'),
     school: '',
-    grade: '',
-    diagnosis: ''
+    grade: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1218,7 +1195,9 @@ function CreateAssessmentForm({ onCancel }: { onCancel: () => void }) {
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest">تاريخ الاختبار</label>
+            <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+              <Calendar size={14} className="text-zinc-400" /> تاريخ الاختبار
+            </label>
             <input 
               type="date"
               required
@@ -1227,16 +1206,6 @@ function CreateAssessmentForm({ onCancel }: { onCancel: () => void }) {
               onChange={e => setFormData({...formData, testDate: e.target.value})}
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-xs font-black text-zinc-400 uppercase tracking-widest">التشخيص (إن وجد)</label>
-          <input 
-            placeholder="مثال: اضطراب طيف التوحد، ADHD، صعوبات تعلم..."
-            className="w-full bg-cream-surface border border-zinc-100 rounded-2xl p-4 text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-right shadow-sm"
-            value={formData.diagnosis}
-            onChange={e => setFormData({...formData, diagnosis: e.target.value})}
-          />
         </div>
 
         {age && (
@@ -1376,12 +1345,6 @@ function AssessmentReportTemplate({ assessment, reportRef }: { assessment: Asses
                 <p className="text-xs font-black text-zinc-400 uppercase">تاريخ الاختبار</p>
                 <p className="text-xl font-bold">{assessment.patient.testDate}</p>
               </div>
-              {assessment.patient.diagnosis && (
-                <div className="col-span-2">
-                  <p className="text-xs font-black text-zinc-400 uppercase">التشخيص</p>
-                  <p className="text-xl font-bold text-indigo-600">{assessment.patient.diagnosis}</p>
-                </div>
-              )}
               {assessment.startTime && (
                 <div>
                   <p className="text-xs font-black text-zinc-400 uppercase">وقت البداية</p>
@@ -1490,9 +1453,9 @@ function AssessmentReportTemplate({ assessment, reportRef }: { assessment: Asses
               <h2 className="text-2xl font-bold border-r-4 border-indigo-600 pr-4">التحليل النوعي والكيفي</h2>
               <div className="grid grid-cols-1 gap-6">
                 {[
-                  { label: 'مستوى الاندماج والدافعية', val: assessment.behavioralObservations.engagement },
-                  { label: 'أسلوب حل المشكلات', val: assessment.behavioralObservations.problemSolvingStyle },
-                  { label: 'تحمل الإحباط', val: assessment.behavioralObservations.frustrationTolerance },
+                  { label: 'مستوى الاندماج والدافعية', val: assessment.qualitativeObservations.engagement },
+                  { label: 'أسلوب حل المشكلات', val: assessment.qualitativeObservations.problemSolvingStyle },
+                  { label: 'تحمل الإحباط', val: assessment.qualitativeObservations.frustrationTolerance },
                   { label: 'ملاحظات العملية', val: assessment.qualitativeObservations.processNotes }
                 ].map(q => q.val && (
                   <div key={q.label} className="bg-zinc-50 p-8 rounded-3xl border border-zinc-100">

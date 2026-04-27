@@ -13,7 +13,14 @@
             "gender": { "type": "string", "enum": ["male", "female"] },
             "birthDate": { "type": "string", "format": "date-time" },
             "testDate": { "type": "string", "format": "date-time" },
-            "diagnosis": { "type": "string" },
+            "ageAtTest": {
+              "type": "object",
+              "properties": {
+                "years": { "type": "number" },
+                "months": { "type": "number" },
+                "days": { "type": "number" }
+              }
+            },
             "school": { "type": "string" },
             "grade": { "type": "string" }
           },
@@ -71,16 +78,7 @@
             "cooperation": { "type": "boolean" },
             "environmentFitting": { "type": "boolean" },
             "isRepresentative": { "type": "boolean" },
-            "engagement": { "type": "string" },
-            "problemSolvingStyle": { "type": "string" },
-            "frustrationTolerance": { "type": "string" },
             "comments": { "type": "string" }
-          }
-        },
-        "qualitativeObservations": {
-          "type": "object",
-          "properties": {
-            "processNotes": { "type": "string" }
           }
         },
         "createdAt": { "type": "string", "format": "date-time" },

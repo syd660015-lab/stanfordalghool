@@ -1,28 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 0. Default Deny
+    // 0. Global Safety Net - Default Deny
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // --- Helpers ---
+    // --- Phase 3: Primitives & Global Helpers ---
+    
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isEmailVerified() {
       return isSignedIn() && request.auth.token.email_verified == true;
-    }
-
-    function isOwner(resource) {
-      return isSignedIn() && resource.data.examinerId == request.auth.uid;
-    }
-
-    function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email == 'ashoorgool2003@gmail.com' && isEmailVerified()
-      );
     }
 
     function isValidId(id) {
@@ -37,33 +28,65 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // --- Validation Helpers ---
+    function isOwner(resource) {
+      return isSignedIn() && resource.data.examinerId == request.auth.uid;
+    }
+
+    // Auth tokens never contain custom claims in this environment.
+    // Explicitly check for admin status by email for the designated developer/admin.
+    function isAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email == 'ashoorgool2003@gmail.com' && 
+             isEmailVerified();
+    }
+
+    // --- Phase 4: Validation Blueprints ---
+
     function isValidAssessment(data) {
-      return data.keys().hasAll(['id', 'patient', 'examinerId', 'scores', 'itemResponses', 'behavioralObservations', 'qualitativeObservations', 'createdAt', 'updatedAt', 'startTime', 'endTime']) &&
-             data.id is string &&
+      return data.keys().hasAll(['patient', 'examinerId', 'createdAt', 'updatedAt']) &&
+             // Identifier Integrity
+             data.examinerId == request.auth.uid &&
+             // Schema Validation
              data.patient is map &&
              data.patient.name is string && data.patient.name.size() > 0 && data.patient.name.size() <= 100 &&
-             data.patient.birthDate is string &&
-             data.patient.testDate is string &&
-             data.examinerId == request.auth.uid &&
+             // Optional fields if present must be correct
+             (!data.keys().contains('scores') || data.scores is map) &&
+             (!data.keys().contains('itemResponses') || data.itemResponses is map) &&
+             (!data.keys().contains('behavioralObservations') || data.behavioralObservations is map) &&
+             // Temporal Integrity
              data.createdAt == request.time &&
              data.updatedAt == request.time;
     }
 
-    // --- Collection Routes ---
+    // --- Collection Rules ---
+
     match /assessments/{assessmentId} {
-      allow get: if isSignedIn() && (isOwner(resource) || isAdmin());
+      // Secure List Queries: Explicitly evaluate resource.data to prevent unauthorized scraping.
       allow list: if isSignedIn() && (resource.data.examinerId == request.auth.uid || isAdmin());
       
-      allow create: if isSignedIn() && isEmailVerified() && isValidId(assessmentId) && isValidAssessment(incoming());
-      
-      allow update: if isSignedIn() && (isOwner(resource) || isAdmin()) && (
-        // Action: Patch Update
-        (incoming().diff(existing()).affectedKeys().hasAll(['updatedAt']) &&
-         incoming().diff(existing()).affectedKeys().hasOnly(['scores', 'itemResponses', 'behavioralObservations', 'qualitativeObservations', 'patient', 'startTime', 'endTime', 'updatedAt', 'clinicName']) &&
-         incoming().updatedAt == request.time)
-      );
-      
+      // Individual document read
+      allow get: if isSignedIn() && (isOwner(resource) || isAdmin());
+
+      // Create: Rigid schema and identity enforcement
+      allow create: if isSignedIn() && 
+                      isEmailVerified() && 
+                      isValidId(assessmentId) && 
+                      isValidAssessment(incoming());
+
+      // Update: Action-Based pattern with affectedKeys().hasOnly()
+      allow update: if isSignedIn() && 
+                      (isOwner(resource) || isAdmin()) && 
+                      isValidAssessment(incoming()) && (
+                        // Admin escape hatch
+                        isAdmin() ||
+                        // Action: Update Scores and Observations
+                        (incoming().diff(existing()).affectedKeys().hasOnly(['scores', 'itemResponses', 'behavioralObservations', 'updatedAt']) &&
+                         incoming().examinerId == existing().examinerId && // Immutable examiner
+                         incoming().createdAt == existing().createdAt && // Immutable timestamp
+                         incoming().updatedAt == request.time)
+                      );
+
+      // Deletion: Restricted to Admin only (Pillar 4)
       allow delete: if isAdmin();
     }
   }
